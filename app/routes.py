@@ -3,8 +3,8 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
-from app.models import User, Patient, CareEvent, Note, Image
-from app.forms import LoginForm, RegistrationForm, CareEventForm, NoteForm, ImageUploadForm
+from app.models import User, Patient, CareEvent, Note, Image, Message
+from app.forms import LoginForm, RegistrationForm, CareEventForm, NoteForm, ImageUploadForm, MessageForm
 from app.utils import admin_required
 from datetime import datetime
 
@@ -79,7 +79,7 @@ def upload_image():
         filename = secure_filename(file.filename)
         file_path = os.path.join(UPLOAD_FOLDER, filename)
         file.save(file_path)
-        print(f"Image saved to: {file_path}")  # Log the full path of the saved file
+        print(f"Image saved to: {file_path}")
         image = Image(filename=filename, patient_id=patient.id)
         db.session.add(image)
         db.session.commit()
@@ -89,7 +89,7 @@ def upload_image():
 @main.route('/uploads/<filename>')
 @login_required
 def uploaded_file(filename):
-    print(f"Attempting to serve file: {filename}")  # Log when the route is called
+    print(f"Attempting to serve file: {filename}")
     try:
         return send_from_directory(UPLOAD_FOLDER, filename)
     except Exception as e:
@@ -107,6 +107,29 @@ def delete_image(image_id):
     db.session.commit()
     flash('Image deleted successfully', 'success')
     return redirect(url_for('main.dashboard'))
+
+@main.route('/messages')
+@login_required
+def messages():
+    form = MessageForm()
+    received_messages = Message.query.filter_by(recipient_id=current_user.id).order_by(Message.timestamp.desc()).all()
+    sent_messages = Message.query.filter_by(sender_id=current_user.id).order_by(Message.timestamp.desc()).all()
+    return render_template('messages.html', form=form, received_messages=received_messages, sent_messages=sent_messages)
+
+@main.route('/send_message', methods=['POST'])
+@login_required
+def send_message():
+    form = MessageForm()
+    if form.validate_on_submit():
+        message = Message(
+            content=form.content.data,
+            sender_id=current_user.id,
+            recipient_id=form.recipient.data
+        )
+        db.session.add(message)
+        db.session.commit()
+        flash('Message sent successfully', 'success')
+    return redirect(url_for('main.messages'))
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():

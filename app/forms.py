@@ -44,3 +44,12 @@ class ImageUploadForm(FlaskForm):
         FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
     ])
     submit = SubmitField('Upload Image')
+
+class MessageForm(FlaskForm):
+    recipient = SelectField('Recipient', coerce=int, validators=[DataRequired()])
+    content = TextAreaField('Message', validators=[DataRequired()])
+    submit = SubmitField('Send Message')
+
+    def __init__(self, *args, **kwargs):
+        super(MessageForm, self).__init__(*args, **kwargs)
+        self.recipient.choices = [(user.id, user.username) for user in User.query.filter_by(role='caregiver').all()]
