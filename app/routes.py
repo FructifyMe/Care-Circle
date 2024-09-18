@@ -17,7 +17,12 @@ def index():
 @main.route('/dashboard')
 @login_required
 def dashboard():
-    patient = Patient.query.first()  # For simplicity, we're using the first patient
+    patient = Patient.query.first()
+    if patient is None:
+        # Create a default patient if none exists
+        patient = Patient(name="Default Patient", age=0)
+        db.session.add(patient)
+        db.session.commit()
     care_events = CareEvent.query.filter_by(patient_id=patient.id).all()
     notes = Note.query.filter_by(patient_id=patient.id).order_by(Note.timestamp.desc()).all()
     care_event_form = CareEventForm()
@@ -29,12 +34,13 @@ def dashboard():
 def add_care_event():
     form = CareEventForm()
     if form.validate_on_submit():
+        patient = Patient.query.first()
         care_event = CareEvent(
             title=form.title.data,
             description=form.description.data,
             start_time=form.start_time.data,
             end_time=form.end_time.data,
-            patient_id=1  # For simplicity, we're using patient_id=1
+            patient_id=patient.id
         )
         db.session.add(care_event)
         db.session.commit()
@@ -46,9 +52,10 @@ def add_care_event():
 def add_note():
     form = NoteForm()
     if form.validate_on_submit():
+        patient = Patient.query.first()
         note = Note(
             content=form.content.data,
-            patient_id=1  # For simplicity, we're using patient_id=1
+            patient_id=patient.id
         )
         db.session.add(note)
         db.session.commit()
