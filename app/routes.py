@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
@@ -6,13 +7,12 @@ from app.models import User, Patient, CareEvent, Note, Image
 from app.forms import LoginForm, RegistrationForm, CareEventForm, NoteForm, ImageUploadForm
 from app.utils import admin_required
 from datetime import datetime
-import os
 
 main = Blueprint('main', __name__)
 auth = Blueprint('auth', __name__)
 admin = Blueprint('admin', __name__)
 
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
@@ -77,7 +77,7 @@ def upload_image():
         patient = Patient.query.first()
         file = form.image.data
         filename = secure_filename(file.filename)
-        file_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, filename)
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
         file.save(file_path)
         print(f"Image saved to: {file_path}")  # Log the full path of the saved file
         image = Image(filename=filename, patient_id=patient.id)
@@ -91,7 +91,7 @@ def upload_image():
 def uploaded_file(filename):
     print(f"Attempting to serve file: {filename}")  # Log when the route is called
     try:
-        return send_from_directory(os.path.join(current_app.root_path, UPLOAD_FOLDER), filename)
+        return send_from_directory(UPLOAD_FOLDER, filename)
     except Exception as e:
         print(f"Error serving file {filename}: {str(e)}")
         return "File not found", 404
@@ -100,7 +100,7 @@ def uploaded_file(filename):
 @login_required
 def delete_image(image_id):
     image = Image.query.get_or_404(image_id)
-    file_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, image.filename)
+    file_path = os.path.join(UPLOAD_FOLDER, image.filename)
     if os.path.exists(file_path):
         os.remove(file_path)
     db.session.delete(image)
