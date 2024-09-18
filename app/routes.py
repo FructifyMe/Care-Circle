@@ -1,14 +1,20 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.utils import secure_filename
 from app import db
-from app.models import User, Patient, CareEvent, Note
-from app.forms import LoginForm, RegistrationForm, CareEventForm, NoteForm
+from app.models import User, Patient, CareEvent, Note, Image
+from app.forms import LoginForm, RegistrationForm, CareEventForm, NoteForm, ImageUploadForm
 from app.utils import admin_required
 from datetime import datetime
+import os
 
 main = Blueprint('main', __name__)
 auth = Blueprint('auth', __name__)
 admin = Blueprint('admin', __name__)
+
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 @main.route('/')
 def index():
@@ -19,15 +25,16 @@ def index():
 def dashboard():
     patient = Patient.query.first()
     if patient is None:
-        # Create a default patient if none exists
         patient = Patient(name="Default Patient", age=0)
         db.session.add(patient)
         db.session.commit()
     care_events = CareEvent.query.filter_by(patient_id=patient.id).all()
     notes = Note.query.filter_by(patient_id=patient.id).order_by(Note.timestamp.desc()).all()
+    images = Image.query.filter_by(patient_id=patient.id).order_by(Image.timestamp.desc()).all()
     care_event_form = CareEventForm()
     note_form = NoteForm()
-    return render_template('dashboard.html', patient=patient, care_events=care_events, notes=notes, care_event_form=care_event_form, note_form=note_form)
+    image_form = ImageUploadForm()
+    return render_template('dashboard.html', patient=patient, care_events=care_events, notes=notes, images=images, care_event_form=care_event_form, note_form=note_form, image_form=image_form)
 
 @main.route('/add_care_event', methods=['POST'])
 @login_required
@@ -60,6 +67,39 @@ def add_note():
         db.session.add(note)
         db.session.commit()
         flash('Note added successfully', 'success')
+    return redirect(url_for('main.dashboard'))
+
+@main.route('/upload_image', methods=['POST'])
+@login_required
+def upload_image():
+    form = ImageUploadForm()
+    if form.validate_on_submit():
+        patient = Patient.query.first()
+        file = form.image.data
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(file_path)
+        image = Image(filename=filename, patient_id=patient.id)
+        db.session.add(image)
+        db.session.commit()
+        flash('Image uploaded successfully', 'success')
+    return redirect(url_for('main.dashboard'))
+
+@main.route('/uploads/<filename>')
+@login_required
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
+@main.route('/delete_image/<int:image_id>', methods=['POST'])
+@login_required
+def delete_image(image_id):
+    image = Image.query.get_or_404(image_id)
+    file_path = os.path.join(UPLOAD_FOLDER, image.filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    db.session.delete(image)
+    db.session.commit()
+    flash('Image deleted successfully', 'success')
     return redirect(url_for('main.dashboard'))
 
 @auth.route('/login', methods=['GET', 'POST'])

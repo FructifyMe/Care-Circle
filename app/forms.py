@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, DateTimeField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from app.models import User
@@ -36,3 +37,10 @@ class CareEventForm(FlaskForm):
 class NoteForm(FlaskForm):
     content = TextAreaField('Note', validators=[DataRequired()])
     submit = SubmitField('Add Note')
+
+class ImageUploadForm(FlaskForm):
+    image = FileField('Image', validators=[
+        FileRequired(),
+        FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
+    ])
+    submit = SubmitField('Upload Image')

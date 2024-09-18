@@ -7,7 +7,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255))  # Changed from 128 to 255
+    password_hash = db.Column(db.String(255))
     role = db.Column(db.String(20), nullable=False)
 
     def set_password(self, password):
@@ -32,6 +32,12 @@ class CareEvent(db.Model):
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+
+class Image(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
 

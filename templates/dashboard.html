@@ -65,5 +65,28 @@
             {% endfor %}
         </ul>
     </div>
+
+    <div class="bg-white p-6 rounded shadow-md">
+        <h3 class="text-xl font-bold mb-4">Image Gallery</h3>
+        <form method="POST" action="{{ url_for('main.upload_image') }}" enctype="multipart/form-data">
+            {{ image_form.hidden_tag() }}
+            <div class="mb-4">
+                {{ image_form.image.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                {{ image_form.image(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
+            </div>
+            {{ image_form.submit(class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline") }}
+        </form>
+
+        <div class="mt-4 grid grid-cols-2 gap-4">
+            {% for image in images %}
+                <div class="relative">
+                    <img src="{{ url_for('main.uploaded_file', filename=image.filename) }}" alt="Patient Image" class="w-full h-auto rounded">
+                    <form method="POST" action="{{ url_for('main.delete_image', image_id=image.id) }}" class="absolute top-0 right-0 m-2">
+                        <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">Delete</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 {% endblock %}

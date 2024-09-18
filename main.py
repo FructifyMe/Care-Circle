@@ -1,7 +1,12 @@
+import os
 from app import create_app, db
 from app.models import User
 
 app = create_app()
+
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 if __name__ == '__main__':
     with app.app_context():
