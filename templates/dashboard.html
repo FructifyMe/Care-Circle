@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-6">Patient Dashboard</h2>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded shadow-md">
+        <h3 class="text-xl font-bold mb-4">Patient Information</h3>
+        <p><strong>Name:</strong> {{ patient.name }}</p>
+        <p><strong>Age:</strong> {{ patient.age }}</p>
+    </div>
+
+    <div class="bg-white p-6 rounded shadow-md">
+        <h3 class="text-xl font-bold mb-4">Care Schedule</h3>
+        <form method="POST" action="{{ url_for('main.add_care_event') }}">
+            {{ care_event_form.hidden_tag() }}
+            <div class="mb-4">
+                {{ care_event_form.title.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                {{ care_event_form.title(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
+            </div>
+            <div class="mb-4">
+                {{ care_event_form.description.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                {{ care_event_form.description(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
+            </div>
+            <div class="mb-4">
+                {{ care_event_form.start_time.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                {{ care_event_form.start_time(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
+            </div>
+            <div class="mb-4">
+                {{ care_event_form.end_time.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                {{ care_event_form.end_time(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
+            </div>
+            {{ care_event_form.submit(class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline") }}
+        </form>
+
+        <ul class="mt-4">
+            {% for event in care_events %}
+                <li class="mb-2">
+                    <strong>{{ event.title }}</strong> - {{ event.start_time.strftime('%Y-%m-%d %H:%M') }} to {{ event.end_time.strftime('%Y-%m-%d %H:%M') }}
+                    <p>{{ event.description }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="bg-white p-6 rounded shadow-md">
+        <h3 class="text-xl font-bold mb-4">Notes</h3>
+        <form method="POST" action="{{ url_for('main.add_note') }}">
+            {{ note_form.hidden_tag() }}
+            <div class="mb-4">
+                {{ note_form.content.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                {{ note_form.content(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
+            </div>
+            {{ note_form.submit(class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline") }}
+        </form>
+
+        <ul class="mt-4">
+            {% for note in notes %}
+                <li class="mb-2">
+                    <p>{{ note.content }}</p>
+                    <small class="text-gray-500">{{ note.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
