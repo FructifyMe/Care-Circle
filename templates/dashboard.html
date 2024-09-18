@@ -80,7 +80,10 @@
         <div class="mt-4 grid grid-cols-2 gap-4">
             {% for image in images %}
                 <div class="relative">
-                    <img src="{{ url_for('main.uploaded_file', filename=image.filename) }}" alt="Patient Image" class="w-full h-auto rounded">
+                    <img src="{{ url_for('main.uploaded_file', filename=image.filename) }}" 
+                         alt="Patient Image" 
+                         class="w-full h-auto rounded"
+                         onerror="this.onerror=null; this.src='/static/placeholder.png';">
                     <form method="POST" action="{{ url_for('main.delete_image', image_id=image.id) }}" class="absolute top-0 right-0 m-2">
                         <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">Delete</button>
                     </form>

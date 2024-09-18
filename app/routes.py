@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
@@ -77,8 +77,9 @@ def upload_image():
         patient = Patient.query.first()
         file = form.image.data
         filename = secure_filename(file.filename)
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        file_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, filename)
         file.save(file_path)
+        print(f"Image saved to: {file_path}")  # Log the full path of the saved file
         image = Image(filename=filename, patient_id=patient.id)
         db.session.add(image)
         db.session.commit()
@@ -88,13 +89,18 @@ def upload_image():
 @main.route('/uploads/<filename>')
 @login_required
 def uploaded_file(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
+    print(f"Attempting to serve file: {filename}")  # Log when the route is called
+    try:
+        return send_from_directory(os.path.join(current_app.root_path, UPLOAD_FOLDER), filename)
+    except Exception as e:
+        print(f"Error serving file {filename}: {str(e)}")
+        return "File not found", 404
 
 @main.route('/delete_image/<int:image_id>', methods=['POST'])
 @login_required
 def delete_image(image_id):
     image = Image.query.get_or_404(image_id)
-    file_path = os.path.join(UPLOAD_FOLDER, image.filename)
+    file_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, image.filename)
     if os.path.exists(file_path):
         os.remove(file_path)
     db.session.delete(image)
